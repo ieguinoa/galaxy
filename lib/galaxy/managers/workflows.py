@@ -12,6 +12,7 @@ from gxformat2 import (
     ImportOptions,
     python_to_workflow,
 )
+from gxformat2._yaml import ordered_dump
 from six import string_types
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, subqueryload
