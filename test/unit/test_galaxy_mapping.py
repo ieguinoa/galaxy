@@ -466,15 +466,7 @@ class MappingTests(unittest.TestCase):
             password="password"
         )
 
-        def workflow_from_steps(steps):
-            stored_workflow = model.StoredWorkflow()
-            stored_workflow.user = user
-            workflow = model.Workflow()
-            workflow.steps = steps
-            workflow.stored_workflow = stored_workflow
-            return workflow
-
-        child_workflow = workflow_from_steps([])
+        child_workflow = _workflow_from_steps(user, [])
         self.persist(child_workflow)
 
         workflow_step_1 = model.WorkflowStep()
@@ -490,17 +482,14 @@ class MappingTests(unittest.TestCase):
         workflow_step_2.get_or_add_input("moo")
         workflow_step_1.add_connection("foo", "cow", workflow_step_2)
 
-        workflow = workflow_from_steps([workflow_step_1, workflow_step_2])
+        workflow = workflow_from_steps(user, [workflow_step_1, workflow_step_2])
         self.persist(workflow)
 
         assert workflow_step_1.id is not None
-        h1 = model.History(name="WorkflowHistory1", user=user)
+        workflow_invocation = _invocation_for_workflow(user, workflow)
 
         invocation_uuid = uuid.uuid1()
-
-        workflow_invocation = model.WorkflowInvocation()
         workflow_invocation.uuid = invocation_uuid
-        workflow_invocation.history = h1
 
         workflow_invocation_step1 = model.WorkflowInvocationStep()
         workflow_invocation_step1.workflow_invocation = workflow_invocation
@@ -513,8 +502,7 @@ class MappingTests(unittest.TestCase):
         workflow_invocation_step2.workflow_invocation = workflow_invocation
         workflow_invocation_step2.workflow_step = workflow_step_2
 
-        workflow_invocation.workflow = workflow
-
+        h1 = workflow_invocation.history
         d1 = self.new_hda(h1, name="1")
         workflow_request_dataset = model.WorkflowRequestToInputDatasetAssociation()
         workflow_request_dataset.workflow_invocation = workflow_invocation
@@ -587,6 +575,23 @@ class MappingTests(unittest.TestCase):
     def expunge(cls):
         cls.model.session.flush()
         cls.model.session.expunge_all()
+
+
+def _invocation_for_workflow(user, workflow):
+    h1 = galaxy.model.History(name="WorkflowHistory1", user=user)
+    workflow_invocation = galaxy.model.WorkflowInvocation()
+    workflow_invocation.workflow = workflow
+    workflow_invocation.history = h1
+    return workflow_invocation
+
+
+def _workflow_from_steps(user, steps):
+    stored_workflow = galaxy.model.StoredWorkflow()
+    stored_workflow.user = user
+    workflow = galaxy.model.Workflow()
+    workflow.steps = steps
+    workflow.stored_workflow = stored_workflow
+    return workflow
 
 
 class MockObjectStore(object):

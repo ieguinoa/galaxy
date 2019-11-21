@@ -19,6 +19,7 @@ from galaxy.managers.histories import HistoryManager
 from galaxy.managers.interactivetool import InteractiveToolManager
 from galaxy.managers.libraries import LibraryManager
 from galaxy.managers.tools import DynamicToolManager
+from galaxy.managers.workflows import WorkflowContentsManager
 from galaxy.model.database_heartbeat import DatabaseHeartbeat
 from galaxy.model.tags import GalaxyTagHandler
 from galaxy.queue_worker import GalaxyQueueWorker
@@ -105,6 +106,7 @@ class UniverseApplication(config.ConfiguresGalaxyMixin):
         self.library_folder_manager = FolderManager()
         self.library_manager = LibraryManager()
         self.dynamic_tool_manager = DynamicToolManager(self)
+        self.workflow_contents_manager = WorkflowContentsManager(self)
 
         # Tool Data Tables
         self._configure_tool_data_tables(from_shed_config=False)
