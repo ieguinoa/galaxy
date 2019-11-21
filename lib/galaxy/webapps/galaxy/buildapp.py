@@ -577,7 +577,7 @@ def populate_api_routes(webapp, app):
             conditions=conditions,
         )
 
-    connect_invocation_endpoint('show', '', action='show_invocation')
+    connect_invocation_endpoint('show', '{.format:[\w\.]+}', action='show_invocation')
     connect_invocation_endpoint('show_report', '/report', action='show_invocation_report')
     connect_invocation_endpoint('jobs_summary', '/jobs_summary', action='invocation_jobs_summary')
     connect_invocation_endpoint('step_jobs_summary', '/step_jobs_summary', action='invocation_step_jobs_summary')
