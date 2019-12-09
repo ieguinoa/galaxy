@@ -1105,7 +1105,11 @@ class HistoryController(BaseUIController, SharableMixin, UsesAnnotations, UsesIt
         #
         # Get history to export.
         #
+        #  igegu test
+        print("Here i am: lib/galaxy/webapps/galaxy/controllers/history.py:export_archive")
         if id:
+            # igegu
+            # get accessible just returns the id fi its accessible to the logged user
             history = self.history_manager.get_accessible(self.decode_id(id), trans.user, current_history=trans.history)
         else:
             # Use current history.
@@ -1123,10 +1127,13 @@ class HistoryController(BaseUIController, SharableMixin, UsesAnnotations, UsesIt
                                               "the archive or import it to another Galaxy server: "
                                               "<a href='%(u)s'>%(u)s</a>" % ({'n': history.name, 'u': url}))
                 else:
+                    # igegu test
+                    print("Serving history export")
                     return self.serve_ready_history_export(trans, jeha)
             elif jeha.preparing:
                 return trans.show_message("Still exporting history %(n)s; please check back soon. Link: <a href='%(s)s'>%(s)s</a>"
                                           % ({'n': history.name, 's': url_for(controller='history', action="export_archive", id=id, qualified=True)}))
+        print("Exporting the history")
         self.queue_history_export(trans, history, gzip=gzip, include_hidden=include_hidden, include_deleted=include_deleted)
         url = url_for(controller='history', action="export_archive", id=id, qualified=True)
         return trans.show_message("Exporting History '%(n)s'. You will need to <a href='%(share)s'>make this history 'accessible'</a> in order to import this to another galaxy sever. <br/>"

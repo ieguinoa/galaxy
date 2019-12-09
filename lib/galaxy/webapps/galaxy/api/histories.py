@@ -458,6 +458,8 @@ class HistoriesController(BaseAPIController, ExportsHistoryMixin, ImportsHistory
         """
         # PUT instead of POST because multiple requests should just result
         # in one object being created.
+        #igegu test
+        print("I'm in lib/galaxy/webapps/galaxy/api/histories.py")
         history = self.manager.get_accessible(self.decode_id(id), trans.user, current_history=trans.history)
         jeha = history.latest_export
         up_to_date = jeha and jeha.up_to_date
@@ -491,6 +493,8 @@ class HistoriesController(BaseAPIController, ExportsHistoryMixin, ImportsHistory
         """
         # Seems silly to put jeha_id in here, but want GET to be immuatable?
         # and this is being accomplished this way.
+        # igegu test
+        print("I'm in lib/galaxy/webapps/galaxy/api/histories.py:chive_download")
         history = self.manager.get_accessible(self.decode_id(id), trans.user, current_history=trans.history)
         matching_exports = [e for e in history.exports if trans.security.encode_id(e.id) == jeha_id]
         if not matching_exports:
