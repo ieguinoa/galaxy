@@ -1389,7 +1389,8 @@ def tar_export_directory(export_directory, out_file, gzip):
     tarfile_mode = "w"
     if gzip:
         tarfile_mode += ":gz"
-
+    # igegu
+    print('how is the tar created lib/galaxy/model/store/__init__.py:tar_export_directory')
     with tarfile.open(out_file, tarfile_mode, dereference=True) as history_archive:
         for export_path in os.listdir(export_directory):
             history_archive.add(os.path.join(export_directory, export_path), arcname=export_path)
