@@ -2912,9 +2912,12 @@ class DatasetInstance(object):
         return rval
 
     def _handle_serialize_files(self, id_encoder, serialization_options, rval):
+        print("im in _handle_serialize_files")
         if serialization_options.serialize_dataset_objects:
+            print("in for the first option")
             rval["dataset"] = self.dataset.serialize(id_encoder, serialization_options)
         else:
+            print("in for the 2nd option")
             serialization_options.serialize_files(self, rval)
 
 
@@ -3124,6 +3127,7 @@ class HistoryDatasetAssociation(DatasetInstance, HasTags, Dictifiable, UsesAnnot
         return rval
 
     def serialize(self, id_encoder, serialization_options, for_link=False):
+        print("inside HistoryDatasetAssociation:serialize()")
         if for_link:
             rval = dict_for(
                 self

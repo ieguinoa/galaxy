@@ -1010,6 +1010,8 @@ class DirectoryModelExportStore(ModelExportStore):
         self.job_output_dataset_associations = {}
 
     def serialize_files(self, dataset, as_dict):
+        # igegu
+        print('Im inside serialize_files')
         if self.export_files is None:
             return None
         elif self.export_files == "symlink":
@@ -1178,30 +1180,33 @@ class DirectoryModelExportStore(ModelExportStore):
 
     def _finalize(self):
         export_directory = self.export_directory
-
+        print("inside DirectoryModelExportStore:_finalize()")
         datasets_attrs = []
         provenance_attrs = []
         for dataset_id, (dataset, include_files) in self.included_datasets.items():
             if include_files:
+                print("including" + str(type(dataset)))
                 datasets_attrs.append(dataset)
             else:
+                # igegu which items end up in the provenance list? it only depends on the setting of include_files parameter?
                 provenance_attrs.append(dataset)
-
+        print("before calling the dumps")
         datasets_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_DATASETS)
         with open(datasets_attrs_filename, 'w') as datasets_attrs_out:
             dump(list(map(lambda d: d.serialize(self.security, self.serialization_options), datasets_attrs)), datasets_attrs_out)
-
+        print("printed dataset attrs")
         with open(datasets_attrs_filename + ".provenance", 'w') as provenance_attrs_out:
             dump(list(map(lambda d: d.serialize(self.security, self.serialization_options), provenance_attrs)), provenance_attrs_out)
 
+        print("printed provenance attrs")
         libraries_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_LIBRARIES)
         with open(libraries_attrs_filename, 'w') as librariess_attrs_out:
             dump(list(map(lambda d: d.serialize(self.security, self.serialization_options), self.included_libraries)), librariess_attrs_out)
-
+        print("before calling the collections")
         collections_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_COLLECTIONS)
         with open(collections_attrs_filename, 'w') as collections_attrs_out:
             dump(list(map(lambda d: d.serialize(self.security, self.serialization_options), self.collections_attrs)), collections_attrs_out)
-
+        print("after printing all atributes files for datasets, provenance, libraries and collections")
         #
         # Write jobs attributes file.
         #
@@ -1225,7 +1230,7 @@ class DirectoryModelExportStore(ModelExportStore):
             if icja:
                 implicit_collection_jobs = icja.implicit_collection_jobs
                 implicit_collection_jobs_dict[implicit_collection_jobs.id] = implicit_collection_jobs
-
+        print("creating associated jobs info")
         for hda_id, (hda, include_files) in self.included_datasets.items():
             # Get the associated job, if any. If this hda was copied from another,
             # we need to find the job that created the origial hda
@@ -1243,6 +1248,7 @@ class DirectoryModelExportStore(ModelExportStore):
 
         # Get jobs' attributes.
         jobs_attrs = []
+        print("before getting job attributes")
         for id, job in jobs_dict.items():
             # Don't attempt to serialize jobs for editing... yet at least.
             if self.serialization_options.for_edit:
@@ -1310,7 +1316,7 @@ class DirectoryModelExportStore(ModelExportStore):
             job_attrs['implicit_output_dataset_collection_mapping'] = implicit_output_dataset_collection_mapping
 
             jobs_attrs.append(job_attrs)
-
+        print("before output dataset mapping loop")
         for job_id, job_output_dataset_associations in self.job_output_dataset_associations.items():
             output_dataset_mapping = {}
             for name, dataset in job_output_dataset_associations.items():
@@ -1318,23 +1324,28 @@ class DirectoryModelExportStore(ModelExportStore):
                     output_dataset_mapping[name] = []
                 output_dataset_mapping[name].append(self.exported_key(dataset))
             jobs_attrs.append({"id": job_id, 'output_dataset_mapping': output_dataset_mapping})
-
+        print("here 1")
         icjs_attrs = []
         for icj_id, icj in implicit_collection_jobs_dict.items():
             icj_attrs = icj.serialize(self.security, self.serialization_options)
             icjs_attrs.append(icj_attrs)
 
+        print("here 2")
         jobs_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_JOBS)
         with open(jobs_attrs_filename, 'w') as jobs_attrs_out:
             dump(jobs_attrs, jobs_attrs_out)
 
+        print("here 3")
         icjs_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_IMPLICIT_COLLECTION_JOBS)
         with open(icjs_attrs_filename, 'w') as icjs_attrs_out:
             dump(icjs_attrs, icjs_attrs_out)
 
+        print("here 4")
         export_attrs_filename = os.path.join(export_directory, ATTRS_FILENAME_EXPORT)
         with open(export_attrs_filename, 'w') as export_attrs_out:
             dump({"galaxy_export_version": GALAXY_EXPORT_VERSION}, export_attrs_out)
+
+        print("here 5")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
