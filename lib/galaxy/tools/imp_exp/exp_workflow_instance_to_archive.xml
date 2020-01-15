@@ -1,0 +1,16 @@
+<tool id="__EXPORT_HISTORY__" name="Export Workflow Instance" version="0.1" tool_type="export_workflow_instance">
+  <type class="ExportWorkflowInstanceTool" module="galaxy.tools"/>
+  <action module="galaxy.tools.actions.export_workflow_instance_imp_exp" class="ExportWorkflowInstanceToolAction"/>
+  <command>python '$export_history' $__EXPORT_WORKFLOW_INSTANCE_COMMAND_INPUTS_OPTIONS__ '$output_file'</command>
+  <inputs>
+    <param name="__INSTANCE_TO_EXPORT__" type="hidden"/>
+    <param name="compress" type="boolean"/>
+    <param name="__EXPORT_WORKFLOW_INSTANCE_COMMAND_INPUTS_OPTIONS__" type="hidden"/>
+  </inputs>
+  <configfiles>
+    <configfile name="export_workflow_instance">from galaxy.tools.imp_exp.export_workflow_instance import main; main()</configfile>
+  </configfiles>
+  <outputs>
+    <data format="gzip" name="output_file"/>
+  </outputs>
+</tool>

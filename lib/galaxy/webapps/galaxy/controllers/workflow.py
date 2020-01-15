@@ -34,7 +34,9 @@ from galaxy.web.framework.helpers import (
 from galaxy.webapps.base.controller import (
     BaseUIController,
     SharableMixin,
-    UsesStoredWorkflowMixin
+    UsesStoredWorkflowMixin,
+    ExportsWorkflowMixin,
+    ImportsWorkflowMixin,
 )
 from galaxy.workflow.extract import (
     extract_workflow,
@@ -177,7 +179,7 @@ class SingleTagContentsParser(HTMLParser):
             self.tag_content += text
 
 
-class WorkflowController(BaseUIController, SharableMixin, UsesStoredWorkflowMixin, UsesItemRatings):
+class WorkflowController(BaseUIController, SharableMixin, UsesStoredWorkflowMixin, UsesItemRatings, ExportsWorkflowMixin, ImportsWorkflowMixin):
     stored_list_grid = StoredWorkflowListGrid()
     published_list_grid = StoredWorkflowAllPublishedGrid()
 

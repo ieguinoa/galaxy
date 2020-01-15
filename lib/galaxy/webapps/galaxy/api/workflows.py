@@ -51,7 +51,7 @@ from galaxy.workflow.run_request import build_workflow_run_configs
 log = logging.getLogger(__name__)
 
 
-class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnnotations, SharableMixin):
+class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnnotations, SharableMixin, ExportsWorkflowMixin):
 
     def __init__(self, app):
         super(WorkflowsAPIController, self).__init__(app)
@@ -872,36 +872,121 @@ class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnn
         workflow_invocation = self.workflow_manager.get_invocation(trans, decoded_workflow_invocation_id)
         if not workflow_invocation:
             raise exceptions.ObjectNotFound()
- 
         download_format = kwd.get("format", "json")
-        if download_format == "json":
+        if download_format == "json" or download_format is None:
             step_details = util.string_as_bool(kwd.get('step_details', 'False'))
             legacy_job_state = util.string_as_bool(kwd.get('legacy_job_state', 'False'))
             return format_return_as_json(self.__encode_invocation(workflow_invocation, step_details=step_details, legacy_job_state=legacy_job_state))
         else:
-            export_store_class = None
-            export_store_class_kwds = {
-                "app": self.app,
-                "export_files": False,
-                "serialize_dataset_objects": False,
+           export_store_class = None
+           export_store_class_kwds = {
+              "app": self.app,
+              "export_files": False,
+              "serialize_dataset_objects": False,
+              }
+           export_target = NamedTemporaryFile("wb").name
+           from galaxy.model.store import BagArchiveModelExportStore, TarModelExportStore
+           if download_format == "tar.gz":
+               export_store_class = TarModelExportStore
+               export_store_class_kwds["gzip"] = True
+           elif download_format.startswith("bag."):
+               bag_archiver = download_format[len("bag."):]
+               if bag_archiver not in ["zip", "tar", "tgz"]:
+                   raise exceptions.RequestParameterInvalidException("Unknown download format [%s]" % download_format)
+               export_store_class = BagArchiveModelExportStore
+               export_store_class_kwds["bag_archiver"] = bag_archiver
+           else:
+               raise exceptions.RequestParameterInvalidException("Unknown download format [%s]" % download_format)
+           export_store = export_store_class(export_target, **export_store_class_kwds)
+           with export_store:
+               export_store.export_workflow_invocation(workflow_invocation)
+           return export_target
+
+
+
+
+
+    @expose_api_raw
+    def export_invocation(self, trans, invocation_id, **kwd):
+        """
+        export_archive(self, trans, id, payload)
+        * PUT /api/histories/{id}/exports:
+            start job (if needed) to create history export for corresponding
+            history.
+
+        :type   id:     str
+        :param  id:     the encoded id of the history to export
+
+        :rtype:     dict
+        :returns:   object containing url to fetch export from.
+        """
+        # PUT instead of POST because multiple requests should just result
+        # in one object being created.
+
+        decoded_workflow_invocation_id = self.decode_id(invocation_id)
+        workflow_invocation = self.workflow_manager.get_invocation(trans, decoded_workflow_invocation_id)
+        if not workflow_invocation:
+            raise exceptions.ObjectNotFound()
+
+        ## need to add the latest_export method to the WorkflowInvocation model (see the History model for an example)
+        # for the moment just set up_to_date=False , this will create the archive every time the API func is called
+        up_to_date=False  
+        # when the latest_export method is available I should do something like:
+        #jeha=workflow_invocation.latest_export   # does the invocation/workflow contains a latest_export attribute?
+        #up_to_date = jeha and jeha.up_to_date
+        if 'force' in kwds:
+            up_to_date = False  # Temp hack to force rebuild everytime during dev
+
+        if not up_to_date:
+            # Need to create new JEHA + job.
+            gzip = kwds.get("gzip", True)
+            include_hidden = kwds.get("include_hidden", False)
+            include_deleted = kwds.get("include_deleted", False)
+            # self.queue_history_export(trans, history, gzip=gzip, include_hidden=include_hidden, include_deleted=include_deleted)
+            self.queue_workflow_invocation_export(trans, workflow_invocation, gzip=gzip, include_hidden=include_hidden, include_deleted=include_deleted)
+        if up_to_date and jeha.ready:
+            jeha_id = trans.security.encode_id(jeha.id)
+            return dict(download_url=url_for("history_archive_download", id=id, jeha_id=jeha_id))
+        else:
+            # Valid request, just resource is not ready yet.
+            trans.response.status = "202 Accepted"
+            return ''
+
+
+
+
+
+        # igegu
+        export_store_class = None
+        export_store_class_kwds = {
+            "app": self.app,
+            "export_files": False,
+            "serialize_dataset_objects": False,
             }
-            export_target = NamedTemporaryFile("wb").name
-            from galaxy.model.store import BagArchiveModelExportStore, TarModelExportStore
-            if download_format == "tar.gz":
-                export_store_class = TarModelExportStore
-                export_store_class_kwds["gzip"] = True
-            elif download_format.startswith("bag."):
-                bag_archiver = download_format[len("bag."):]
-                if bag_archiver not in ["zip", "tar", "tgz"]:
-                    raise exceptions.RequestParameterInvalidException("Unknown download format [%s]" % download_format)
-                export_store_class = BagArchiveModelExportStore
-                export_store_class_kwds["bag_archiver"] = bag_archiver
+        decoded_workflow_invocation_id = self.decode_id(invocation_id)
+        workflow_invocation = self.workflow_manager.get_invocation(trans, decoded_workflow_invocation_id)
+        if not workflow_invocation:
+            raise exceptions.ObjectNotFound()
+        download_format = kwd.get("format", "tar.gz")   # format options should be tar (can't just return a json)
+        export_target = NamedTemporaryFile("wb").name
+        from galaxy.model.store import BagArchiveModelExportStore, TarModelExportStore
+        if download_format == "tar.gz":
+            export_store_class = TarModelExportStore
+            export_store_class_kwds["gzip"] = True
+        elif download_format.startswith("bag."):
+            bag_archiver = download_format[len("bag."):]
+            if bag_archiver not in ["zip", "tar", "tgz"]:
+                raise exceptions.RequestParameterInvalidException("Unknown download format [%s]" % download_format)
+            export_store_class = BagArchiveModelExportStore
+            export_store_class_kwds["bag_archiver"] = bag_archiver
             else:
                 raise exceptions.RequestParameterInvalidException("Unknown download format [%s]" % download_format)
-            export_store = export_store_class(export_target, **export_store_class_kwds)
-            with export_store:
-                export_store.export_workflow_invocation(workflow_invocation)
-            return export_target
+        export_store = export_store_class(export_target, **export_store_class_kwds)
+        with export_store:
+            export_store.export_workflow_invocation_with_files(workflow_invocation)
+        return export_target
+
+
 
     @expose_api
     def cancel_invocation(self, trans, invocation_id, **kwd):

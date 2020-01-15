@@ -438,6 +438,39 @@ class ImportsHistoryMixin(object):
         history_imp_tool.execute(trans, incoming=incoming)
 
 
+class ExportsWorkflowMixin(object):
+
+    def serve_ready_workflow_instance_export(self, trans, jeha):
+        assert jeha.ready
+        if jeha.compressed:
+            trans.response.set_content_type('application/x-gzip')
+        else:
+            trans.response.set_content_type('application/x-tar')
+        disposition = 'attachment; filename="%s"' % jeha.export_name
+        trans.response.headers["Content-Disposition"] = disposition
+        archive = trans.app.object_store.get_filename(jeha.dataset)
+        return open(archive, mode='rb')
+
+    def queue_workflow_instance_export(self, trans, history, gzip=True, include_hidden=False, include_deleted=False):
+        # Convert options to booleans.
+        if isinstance(gzip, string_types):
+            gzip = (gzip in ['True', 'true', 'T', 't'])
+        if isinstance(include_hidden, string_types):
+            include_hidden = (include_hidden in ['True', 'true', 'T', 't'])
+        if isinstance(include_deleted, string_types):
+            include_deleted = (include_deleted in ['True', 'true', 'T', 't'])
+
+        # Run job to do export.
+        history_exp_tool = trans.app.toolbox.get_tool('__EXPORT_HISTORY__')
+        params = {
+            'history_to_export': history,
+            'compress': gzip,
+            'include_hidden': include_hidden,
+            'include_deleted': include_deleted
+        }
+
+        history_exp_tool.execute(trans, incoming=params, history=history, set_output_hid=True)
+
 class UsesLibraryMixin(object):
 
     def get_library(self, trans, id, check_ownership=False, check_accessible=True):
