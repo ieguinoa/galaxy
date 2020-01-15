@@ -820,12 +820,13 @@ class BaseDirectoryImportModelStore(ModelImportStore):
     def workflow_paths(self):
         workflows_directory = os.path.join(self.archive_dir, "workflows")
         if not os.path.exists(workflows_directory):
-            return []
+            return
 
         for name in os.listdir(workflows_directory):
             assert name.endswith(".gxwf.yml")
             workflow_key = name[0:-len(".gxwf.yml")]
             yield workflow_key, os.path.join(workflows_directory, name)
+            return
 
     def _read_list_if_exists(self, file_name, required=False):
         file_name = os.path.join(self.archive_dir, file_name)
@@ -1195,6 +1196,9 @@ class DirectoryModelExportStore(ModelExportStore):
 
     def export_workflow_invocation(self, workflow_invocation, include_hidden=False, include_deleted=False):
         self.included_invocations.append(workflow_invocation)
+
+    def export_workflow_invocation_with_files():
+        self.export_workflow_invocation()
 
     def add_job_output_dataset_associations(self, job_id, name, dataset_instance):
         job_output_dataset_associations = self.job_output_dataset_associations
