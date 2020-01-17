@@ -1471,6 +1471,53 @@ class JobImportHistoryArchive(RepresentById):
         self.archive_dir = archive_dir
 
 
+class JobExportInvocationArchive(RepresentById):
+    def __init__(self, job=None, invocation=None, dataset=None, compressed=False,
+                 invocation_attrs_filename=None):
+        self.job = job
+        self.invocation = invocation
+        self.dataset = dataset
+        self.compressed = compressed
+        self.invocation_attrs_filename = invocation_attrs_filename
+
+    @property
+    def temp_directory(self):
+        return os.path.split(self.invocation_attrs_filename)[0]
+
+    @property
+    def up_to_date(self):
+        """ Return False, if a new export should be generated for corresponding
+        invocation
+        """
+        job = self.job
+        return job.state not in [Job.states.ERROR, Job.states.DELETED] \
+            and job.update_time > self.invocation.update_time
+
+    @property
+    def ready(self):
+        return self.job.state == Job.states.OK
+
+    @property
+    def preparing(self):
+        return self.job.state in [Job.states.RUNNING, Job.states.QUEUED, Job.states.WAITING]
+
+    @property
+    def export_name(self):
+        # Stream archive.
+        iname = ready_name_for_url(self.invocatio.name)
+        iname = "Galaxy-Workflow-Invocation-%s.tar" % (iname)
+        if self.compressed:
+            iname += ".gz"
+        return iname
+
+
+class JobImportInvocatioArchive(RepresentById):
+    def __init__(self, job=None, invocation=None, archive_dir=None):
+        self.job = job
+        self.invocation = invocation
+        self.archive_dir = archive_dir
+
+
 class JobContainerAssociation(RepresentById):
     def __init__(self, job=None, container_type=None, container_name=None, container_info=None):
         self.job = job
