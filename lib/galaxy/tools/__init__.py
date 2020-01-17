@@ -2476,6 +2476,14 @@ class ImportHistoryTool(Tool):
     tool_type = 'import_history'
 
 
+class ExportWorkflowInvocationTool(Tool):
+    tool_type = 'export_invocation'
+
+
+class ImportWorkflowInvocationTool(Tool):
+    tool_type = 'import_invocation'
+
+
 class InteractiveTool(Tool):
     tool_type = 'interactive'
     produces_entry_points = True
