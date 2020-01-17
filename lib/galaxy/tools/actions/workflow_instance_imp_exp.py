@@ -9,8 +9,8 @@ from galaxy.tools.imp_exp import JobExportHistoryArchiveWrapper
 log = logging.getLogger(__name__)
 
 
-class ImportHistoryToolAction(ToolAction):
-    """Tool action used for importing a history to an archive. """
+class ImportWorkflowInvocationToolAction(ToolAction):
+    """Tool action used for importing a workflow invocation """
 
     def execute(self, tool, trans, incoming={}, set_output_hid=False, overwrite=True, history=None, **kwargs):
         #
@@ -65,24 +65,24 @@ class ImportHistoryToolAction(ToolAction):
         return job, OrderedDict()
 
 
-class ExportHistoryToolAction(ToolAction):
-    """Tool action used for exporting a history to an archive. """
+class ExportWorkflowInvocationToolAction(ToolAction):
+    """Tool action used for exporting a workflow invocation to an archive. """
 
-    def execute(self, tool, trans, incoming={}, set_output_hid=False, overwrite=True, history=None, **kwargs):
+    def execute(self, tool, trans, incoming={}, overwrite=True, invocation=None, **kwargs):
         trans.check_user_activation()
         #
-        # Get history to export.
+        # Get workflow invocation to export.
         #
-        history = None
+        invocation = None
         for name, value in incoming.items():
-            if isinstance(value, trans.app.model.History):
-                history_param_name = name
-                history = value
-                del incoming[history_param_name]
+            if isinstance(value, trans.app.model.WorkflowInvocation):
+                param_name = name
+                invocation = value
+                del incoming[param_name]
                 break
 
-        if not history:
-            raise Exception('There is no history to export.')
+        if not invocation:
+            raise Exception('There is no invocation to export.')
 
         #
         # Create the job and output dataset objects
@@ -91,11 +91,8 @@ class ExportHistoryToolAction(ToolAction):
         job.galaxy_version = trans.app.config.version_major
         session = trans.get_galaxy_session()
         job.session_id = session and session.id
-        if history:
-            history_id = history.id
-        else:
-            history_id = trans.history.id
-        job.history_id = history_id
+        history_id = trans.history.id
+        job.history_id = history_id # use current history 
         job.tool_id = tool.id
         if trans.user:
             # If this is an actual user, run the job as that individual.  Otherwise we're running as guest.
@@ -116,13 +113,13 @@ class ExportHistoryToolAction(ToolAction):
         #
 
         # Add association for keeping track of job, history, archive relationship.
-        jeha = trans.app.model.JobExportHistoryArchive(job=job, history=history,
+        jeia = trans.app.model.JobExportInvocationArchive(job=job, invocation=invocation,
                                                        dataset=archive_dataset,
                                                        compressed=incoming['compress'])
-        trans.sa_session.add(jeha)
+        trans.sa_session.add(jeia)
 
-        job_wrapper = JobExportHistoryArchiveWrapper(trans.app, job)
-        cmd_line = job_wrapper.setup_job(jeha, include_hidden=incoming['include_hidden'],
+        job_wrapper = JobExportInvocationArchiveWrapper(trans.app, job)
+        cmd_line = job_wrapper.setup_job(jeia, include_hidden=incoming['include_hidden'],
                                          include_deleted=incoming['include_deleted'])
 
         #
