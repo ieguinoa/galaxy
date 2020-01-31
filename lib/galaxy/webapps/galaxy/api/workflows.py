@@ -929,7 +929,7 @@ class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnn
 
         ## need to add the latest_export method to the WorkflowInvocation model (see the History model for an example)
         # for the moment just set up_to_date=False , this will create the archive every time the API func is called
-        up_to_date=False  
+        up_to_date=False
         # when the latest_export method is available I should do something like:
         #jeha=workflow_invocation.latest_export   # does the invocation/workflow contains a latest_export attribute?
         #up_to_date = jeha and jeha.up_to_date
@@ -990,24 +990,24 @@ class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnn
       """
       export_invocation( self, trans, id, jeha_id )
       * GET /api/invocations/exports/{invocation_id}{.format}/{jeha_id}:
-      ┆   If ready and available, return raw contents of exported history.
-      ┆   Use/poll "PUT /api/histories/{id}/exports" to initiate the creation
-      ┆   of such an export - when ready that route will return 200 status
-      ┆   code (instead of 202) with a JSON dictionary containing a
-      ┆   `download_url`.
+        If ready and available, return raw contents of exported history.
+        Use/poll "PUT /api/histories/{id}/exports" to initiate the creation
+        of such an export - when ready that route will return 200 status
+        code (instead of 202) with a JSON dictionary containing a
+        `download_url`.
       """
       # Seems silly to put jeha_id in here, but want GET to be immuatable?
       # and this is being accomplished this way.
       history = self.manager.get_accessible(self.decode_id(id), trans.user, current_history=trans.history)
       matching_exports = [e for e in history.exports if trans.security.encode_id(e.id) == jeha_id]
       if not matching_exports:
-      ┆   raise exceptions.ObjectNotFound()
+          raise exceptions.ObjectNotFound()
 
       jeha = matching_exports[0]
       if not jeha.ready:
-      ┆   # User should not have been given this URL, PUT export should have
-      ┆   # return a 202.
-      ┆   raise exceptions.MessageException("Export not available or not yet ready.")
+          # User should not have been given this URL, PUT export should have
+          # return a 202.
+          raise exceptions.MessageException("Export not available or not yet ready.")
 
       return self.serve_ready_history_export(trans, jeha)
 

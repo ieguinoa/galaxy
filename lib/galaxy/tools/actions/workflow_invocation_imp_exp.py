@@ -21,9 +21,7 @@ class ImportWorkflowInvocationToolAction(ToolAction):
         job.galaxy_version = trans.app.config.version_major
         session = trans.get_galaxy_session()
         job.session_id = session and session.id
-        if history:
-            history_id = history.id
-        elif trans.history:
+        if trans.history:
             history_id = trans.history.id
         else:
             history_id = None
@@ -91,8 +89,11 @@ class ExportWorkflowInvocationToolAction(ToolAction):
         job.galaxy_version = trans.app.config.version_major
         session = trans.get_galaxy_session()
         job.session_id = session and session.id
-        history_id = trans.history.id
-        job.history_id = history_id # use current history 
+        if trans.history:
+            history_id = trans.history.id
+        else:
+            history_id = None
+        job.history_id = history_id # use current history (if exists)
         job.tool_id = tool.id
         if trans.user:
             # If this is an actual user, run the job as that individual.  Otherwise we're running as guest.
@@ -127,8 +128,8 @@ class ExportWorkflowInvocationToolAction(ToolAction):
         #
 
         # Set additional parameters.
-        incoming['__HISTORY_TO_EXPORT__'] = history.id
-        incoming['__EXPORT_HISTORY_COMMAND_INPUTS_OPTIONS__'] = cmd_line
+        incoming['__INVOCATION_TO_EXPORT__'] = invocation.id
+        incoming['__EXPORT_WORKFLOW_INVOCATION_COMMAND_INPUTS_OPTIONS__'] = cmd_line
         for name, value in tool.params_to_strings(incoming, trans.app).items():
             job.add_parameter(name, value)
 
@@ -136,6 +137,6 @@ class ExportWorkflowInvocationToolAction(ToolAction):
 
         # Queue the job for execution
         trans.app.job_manager.enqueue(job, tool=tool)
-        trans.log_event("Added export history job to the job queue, id: %s" % str(job.id), tool_id=job.tool_id)
+        trans.log_event("Added export workflow invocation job to the queue, id: %s" % str(job.id), tool_id=job.tool_id)
 
         return job, OrderedDict()

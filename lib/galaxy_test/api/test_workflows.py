@@ -3740,6 +3740,13 @@ input_c:
             usage_details_response = self._get("workflows/%s/usage/%s" % (workflow_id, invocation_id))
             self._assert_status_code_is(usage_details_response, 403)
 
+    def test_export_invocation_files()
+        # need to test a call to   export_invocation(self, trans, invocation_id, **kwd):
+        workflow_id, invocation = self._run_workflow_once_get_invocation("test_invocation_export_targz")
+        invocation_id = invocation["id"]
+        url = "invocations/exports/%s.tar.gz" % (invocation_id)
+
+
     def _invoke_paused_workflow(self, history_id):
         workflow = self.workflow_populator.load_workflow_from_resource("test_workflow_pause")
         workflow_id = self.workflow_populator.create_workflow(workflow)

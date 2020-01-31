@@ -1,14 +1,14 @@
 <tool id="__EXPORT_WORKFLOW_INVOCATION__" name="Export Workflow Invocation" version="0.1" tool_type="export_invocation">
   <type class="ExportWorkflowInvocationTool" module="galaxy.tools"/>
   <action module="galaxy.tools.actions.workflow_invocation_imp_exp" class="ExportWorkflowInvocationToolAction"/>
-  <command>python '$export_history' $__EXPORT_WORKFLOW_INVOCATION_COMMAND_INPUTS_OPTIONS__ '$output_file'</command>
+  <command>python '$export_workflow_invocation' $__EXPORT_WORKFLOW_INVOCATION_COMMAND_INPUTS_OPTIONS__ '$output_file'</command>
   <inputs>
-    <param name="__INSTANCE_TO_EXPORT__" type="hidden"/>
+    <param name="__INVOCATION_TO_EXPORT__" type="hidden"/>
     <param name="compress" type="boolean"/>
     <param name="__EXPORT_WORKFLOW_INVOCATION_COMMAND_INPUTS_OPTIONS__" type="hidden"/>
   </inputs>
   <configfiles>
-    <configfile name="export_workflow_instance">from galaxy.tools.imp_exp.export_workflow_invocation import main; main()</configfile>
+    <configfile name="export_workflow_invocation">from galaxy.tools.imp_exp.export_workflow_invocation import main; main()</configfile>
   </configfiles>
   <outputs>
     <data format="gzip" name="output_file"/>
