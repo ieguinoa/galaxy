@@ -485,6 +485,34 @@ class WorkflowsAPIController(BaseAPIController, UsesStoredWorkflowMixin, UsesAnn
         else:
             return format_return_as_json(ret_dict, pretty=True)
 
+    @expose_api_raw_anonymous_and_sessionless
+    def workflow_ro_crate():
+        """
+        GET /api/workflows/{workflow_id}/ro_crate/download
+
+        Downloads a RO-Crate with the workflow definition
+        """
+        stored_workflow = self.__get_stored_accessible_workflow(trans, workflow_id, **kwd)
+
+        # style = kwd.get("style", "export")
+        # download_format = kwd.get('format')
+        # version = kwd.get('version')
+        # ret_dict = self.workflow_contents_manager.workflow_to_dict(trans, stored_workflow, style=style, version=version)
+        # if download_format == 'json-download':
+            # sname = stored_workflow.name
+            # sname = ''.join(c in util.FILENAME_VALID_CHARS and c or '_' for c in sname)[0:150]
+            # if ret_dict.get("format-version", None) == "0.1":
+                # extension = "ga"
+            # else:
+                # extension = "gxwf.json"
+            # trans.response.headers["Content-Disposition"] = 'attachment; filename="Galaxy-Workflow-%s.%s"' % (sname, extension)
+            # trans.response.set_content_type('application/galaxy-archive')
+
+        # if style == "format2" and download_format != 'json-download':
+            # return ordered_dump(ret_dict)
+        # else:
+            # return format_return_as_json(ret_dict, pretty=True)
+
     @expose_api
     def delete(self, trans, id, **kwd):
         """

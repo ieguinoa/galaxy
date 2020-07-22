@@ -544,6 +544,12 @@ def populate_api_routes(webapp, app):
                           action='import_shared_workflow_deprecated',
                           conditions=dict(method=['POST']))
 
+    webapp.mapper.connect('workflow_ro_crate',
+                          '/api/workflows/{workflow_id}/ro_crate/download',
+                          controller='workflows',
+                          action='workflow_ro_crate',
+                          conditions=dict(method=['GET']))
+
     # route for creating/getting converted datasets
     webapp.mapper.connect('/api/datasets/{dataset_id}/converted', controller='datasets', action='converted', ext=None)
     webapp.mapper.connect('/api/datasets/{dataset_id}/converted/{ext}', controller='datasets', action='converted')
